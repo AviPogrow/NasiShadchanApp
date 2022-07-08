@@ -14,11 +14,19 @@ class ShadchanGirlNotesVC: UITableViewController {
     var isEditingNote: Bool = false
     var notesImageURLString = ""
     var textFieldString = ""
+    var elevatorPitchFieldString = ""
+
+    
     var selectedGirlNote: ShadchanGirlNote!
     var selectedNasiGirl: NasiGirl!
     
+    
+    
+    
+    
     @IBOutlet weak var notesImageView: UIImageView!
     @IBOutlet weak var notesTextField: UITextView!
+    @IBOutlet weak var elevatorPitchTextField: UITextView!
     
     //get the notes node
     // get the current user
@@ -29,35 +37,50 @@ class ShadchanGirlNotesVC: UITableViewController {
         
     }
     
+//    func getPerUserPerGirlNotesRef() -> NSObject {
+//        let allNotesRef = Database.database().reference().child("ShadchanNotesAndImagesOfNotes")
+//
+//          // get uid for current user
+//          guard let uid = Auth.auth().currentUser?.uid else { return nil }
+//
+//          let currentUserNotesRef = allNotesRef.child(uid)
+//          let currentGirlUID = selectedNasiGirl.key
+//
+//        return currentUserNotesRef.child(currentGirlUID)
+//    }
+    
     func fetchNoteForGirl() {
-      //self.view.showLoadingIndicator()
-      
-    //  get the node
-      let allNotesRef = Database.database().reference().child("ShadchanNotesAndImagesOfNotes")
+        
+        let allNotesRef = Database.database().reference().child("ShadchanNotesAndImagesOfNotes")
         
         // get uid for current user
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
         let currentUserNotesRef = allNotesRef.child(uid)
         let currentGirlUID = selectedNasiGirl.key
-    
+        print("The type of currentUserNotesRef.child(currentGirlUID) is: ")
+        print(type(of: currentUserNotesRef.child(currentGirlUID)))
+        
+        //        let currentUserCurrentGirlNotesRef = getPerUserPerGirlNotesRef()
         let currentUserCurrentGirlNotesRef = currentUserNotesRef.child(currentGirlUID)
         
         currentUserCurrentGirlNotesRef.observe(.value, with: { snapshot in
-        
-            let snapshot = snapshot as? DataSnapshot
-           let note = ShadchanGirlNote(snapshot: snapshot!) as! ShadchanGirlNote
+            
+            //            let snapshot = snapshot as? DataSnapshot //unused code, cmlk commented out 6/10/22
+            let note = ShadchanGirlNote(snapshot: snapshot) //as! ShadchanGirlNote //unused code, cmlk commented out 6/10/22
             
             print("the url String is\(note.key)\(note.notesImageURL)")
             
             self.notesImageURLString = note.notesImageURL
             self.textFieldString = note.notesTextString
+            self.elevatorPitchFieldString = note.elevatorPitchTextString
             
             self.populateImageView()
             self.populateTextField()
+            self.populateElevatorPitch()
             self.tableView.reloadData()
-     })
-   }
+        })
+    }
         
     
      func populateImageView() {
@@ -65,6 +88,9 @@ class ShadchanGirlNotesVC: UITableViewController {
     }
     func populateTextField() {
         notesTextField.text = self.textFieldString
+    }
+    func populateElevatorPitch() {
+        elevatorPitchTextField.text = self.elevatorPitchFieldString
     }
     
     
@@ -180,8 +206,9 @@ class ShadchanGirlNotesVC: UITableViewController {
         // get uid for current user
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let noteText = notesTextField.text ?? ""
+        let elevatorPitchText = elevatorPitchTextField.text ?? ""
         let timeStamp = "\(Date())"
-        let newNote = ShadchanGirlNote(ShachanID: uid, ShadchanEmail: "", ShadchanFirstName: "", ShadchanLastName: "", girlFirstName: "", girlLastName: "", girlRef: "", girlUID: "", notesImageURL: notesImageURLString, notesTextString: noteText, timeStamp: timeStamp)
+        let newNote = ShadchanGirlNote(ShachanID: uid, ShadchanEmail: "", ShadchanFirstName: "", ShadchanLastName: "", girlFirstName: "", girlLastName: "", girlRef: "", girlUID: "", notesImageURL: notesImageURLString, notesTextString: noteText, elevatorPitchText: elevatorPitchText, timeStamp: timeStamp)
       
         let girlID = selectedNasiGirl.key
         let ref = Database.database().reference().child("ShadchanNotesAndImagesOfNotes").child(uid).child(girlID)
@@ -193,17 +220,17 @@ class ShadchanGirlNotesVC: UITableViewController {
     
     func updateNoteInFirebase() {
       
-        let creationDate = Date()
+//        let creationDate = Date() //unused code, cmlk commented out 6/10/22
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat =  "MM-dd-yyyy"//"hh:mm:ss a"
        
-        let creationDateString = dateFormatter.string(from: creationDate)
+//        let creationDateString = dateFormatter.string(from: creationDate) //unused code, cmlk commented out 6/10/22
         // get uid for current user
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
         let noteText = notesTextField.text ?? ""
         let timeStamp = "\(Date())"
-        let revisedNote = ShadchanGirlNote(ShachanID: "", ShadchanEmail: "", ShadchanFirstName: "", ShadchanLastName: "", girlFirstName: selectedNasiGirl.firstNameOfGirl, girlLastName: selectedNasiGirl.lastNameOfGirl, girlRef: "", girlUID: "", notesImageURL: notesImageURLString, notesTextString: noteText, timeStamp: timeStamp)
+        let revisedNote = ShadchanGirlNote(ShachanID: uid, ShadchanEmail: "", ShadchanFirstName: "", ShadchanLastName: "", girlFirstName: selectedNasiGirl.firstNameOfGirl, girlLastName: selectedNasiGirl.lastNameOfGirl, girlRef: "", girlUID: "", notesImageURL: notesImageURLString, notesTextString: noteText, elevatorPitchText: "", timeStamp: timeStamp)
         
         let dict = revisedNote.toAnyObject()
         let ref = selectedGirlNote.ref
